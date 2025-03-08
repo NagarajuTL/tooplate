@@ -8,7 +8,8 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/NagarajuTL/tooplate.git'
+                 git branch: 'main', url: 'https://github.com/NagarajuTL/tooplate.git'
+
             }
         }
 
