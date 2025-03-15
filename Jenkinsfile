@@ -3,13 +3,13 @@ pipeline {
 
     environment {
         IMAGE_NAME = 'nagarajutl/tooplate-website'
-        KUBECONFIG = credentials('k3s-kubeconfig')  // Store in Jenkins credentials
+        KUBECONFIG = '/var/lib/jenkins/k3s.yaml'  // Set a path Jenkins can access
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/your-repo.git'
+                git branch: 'main', url: 'https://github.com/NagarajuTL/tooplate.git'
             }
         }
 
@@ -29,7 +29,7 @@ pipeline {
 
         stage('Deploy to K3s') {
             steps {
-                sh "kubectl apply -f deployment.yaml"
+                sh "kubectl --kubeconfig=$KUBECONFIG apply -f deployment.yaml"
             }
         }
     }
