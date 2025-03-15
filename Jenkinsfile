@@ -1,23 +1,35 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE_NAME = 'nagarajutl/tooplate-website'
+        KUBECONFIG = credentials('k3s-kubeconfig')  // Store in Jenkins credentials
+    }
+
     stages {
-        stage('Check Jenkins') {
+        stage('Checkout Code') {
             steps {
-                echo "Jenkins pipeline is running successfully!"
+                git branch: 'main', url: 'https://github.com/your-repo.git'
             }
         }
 
-        stage('List Files') {
+        stage('Build Docker Image') {
             steps {
-                sh "ls -l"
+                sh "docker build -t ${IMAGE_NAME}:latest ."
             }
         }
 
-        stage('Sleep Test') {
+        stage('Push Image to Registry') {
             steps {
-                sh "sleep 5"
-                echo "Completed sleep test!"
+                withDockerRegistry([credentialsId: 'docker-hub-credentials', url: '']) {
+                    sh "docker push ${IMAGE_NAME}:latest"
+                }
+            }
+        }
+
+        stage('Deploy to K3s') {
+            steps {
+                sh "kubectl apply -f deployment.yaml"
             }
         }
     }
