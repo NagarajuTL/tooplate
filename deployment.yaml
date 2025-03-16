@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: static-app
-          image: nagarajutl/static-app:latest
+          image: nagarajutl/tooplate-website:latest  # Match this with Jenkins IMAGE_NAME
           ports:
             - containerPort: 80
 ---
@@ -30,4 +30,5 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 80
-      nodePort: 30008  # Exposes the app on port 30008
+      nodePort: 30008  # Ensure this port is open on your cluster node
+

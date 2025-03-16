@@ -3,7 +3,8 @@ pipeline {
 
     environment {
         IMAGE_NAME = 'nagarajutl/tooplate-website'
-        KUBECONFIG = '/var/lib/jenkins/k3s.yaml'  // Set a path Jenkins can access
+        IMAGE_TAG = "${BUILD_NUMBER}"  // Use Jenkins build number for versioning
+        KUBECONFIG = '/var/lib/jenkins/k3s.yaml'  // Ensure Jenkins has access
     }
 
     stages {
@@ -15,21 +16,24 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t ${IMAGE_NAME}:latest ."
+                sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
             }
         }
 
         stage('Push Image to Registry') {
             steps {
                 withDockerRegistry([credentialsId: 'docker-hub-credentials', url: '']) {
-                    sh "docker push ${IMAGE_NAME}:latest"
+                    sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
                 }
             }
         }
 
-        stage('Deploy to K3s') {
+        stage('Update Deployment and Deploy to K3s') {
             steps {
-                sh "kubectl --kubeconfig=$KUBECONFIG apply -f deployment.yaml"
+                sh """
+                sed -i 's|image: nagarajutl/tooplate-website:.*|image: nagarajutl/tooplate-website:${IMAGE_TAG}|' deployment.yaml
+                kubectl --kubeconfig=$KUBECONFIG apply -f deployment.yaml
+                """
             }
         }
     }
