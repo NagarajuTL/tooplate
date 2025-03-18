@@ -3,8 +3,9 @@ pipeline {
 
     environment {
         IMAGE_NAME = 'nagarajutl/tooplate-website'
-        IMAGE_TAG = "${BUILD_NUMBER}"  // Use Jenkins build number for versioning
-        KUBECONFIG = '/var/lib/jenkins/k3s.yaml'  // Ensure Jenkins has access
+        IMAGE_TAG = "${BUILD_NUMBER}"  // Versioning with Jenkins build number
+        CONTAINER_NAME = 'tooplate-container'  // Name of the running container
+        PORT = '8090'  // Change if needed
     }
 
     stages {
@@ -28,12 +29,20 @@ pipeline {
             }
         }
 
-        stage('Update Deployment and Deploy to K3s') {
+        stage('Run Container') {
             steps {
-                sh """
-                sed -i 's|image: nagarajutl/tooplate-website:.*|image: nagarajutl/tooplate-website:${IMAGE_TAG}|' deployment.yaml
-                kubectl --kubeconfig=$KUBECONFIG apply -f deployment.yaml
-                """
+                script {
+                    // Stop and remove the existing container if it is running
+                    sh """
+                    docker stop ${CONTAINER_NAME} || true
+                    docker rm ${CONTAINER_NAME} || true
+                    """
+
+                    // Run the new container
+                    sh """
+                    docker run -d --name ${CONTAINER_NAME} -p ${PORT}:80 ${IMAGE_NAME}:${IMAGE_TAG}
+                    """
+                }
             }
         }
     }
